@@ -51,9 +51,9 @@ export async function extractPatientData(
   transcript: string
 ): Promise<PatientData> {
 
-  // ✅ Add this block — short-circuit to mock data in dev mode
+  //short-circuit to mock data in dev mode
   if (MOCK_MODE) {
-    console.log("⚙️ MOCK_MODE enabled – returning hardcoded patient data");
+    console.log("MOCK_MODE enabled – returning hardcoded patient data");
     return {
       age: 62,
       sex: "female",

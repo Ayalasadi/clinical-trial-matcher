@@ -1,0 +1,66 @@
+Doctor: Hi Maria, it's good to see you again. How have you been feeling since our last visit?
+
+Patient: Honestly, pretty tired. The fatigue is getting worse. And I’ve had some shortness of breath when I walk up the stairs.
+
+Doctor: Okay. Any pain?
+
+Patient: Some soreness in my chest and upper back, but it's not sharp pain. More like pressure.
+
+Doctor: Got it. I’m going to review where we are. You were diagnosed in March with stage IIIA non-small cell lung cancer, specifically adenocarcinoma, correct?
+
+Patient: Yes.
+
+Doctor: And we started concurrent chemoradiation — carboplatin plus paclitaxel with radiation — and you completed that about six weeks ago, right?
+
+Patient: Yeah, finished mid-September.
+
+Doctor: Have you had any treatment since then? Immunotherapy, maintenance therapy, clinical trial enrollment, anything like that?
+
+Patient: No, not yet. You said we’d talk about next steps today.
+
+Doctor: Exactly. Before we do that, I need to confirm a few clinical details because some trials are very specific. First: how old are you?
+
+Patient: I’m 62.
+
+Doctor: And for the record, sex assigned at birth?
+
+Patient: Female.
+
+Doctor: Are you currently able to do normal daily activities like showering, cooking, light housework?
+
+Patient: Yes. I can do basic stuff around the house, I just get winded if I try to walk more than a block or carry groceries.
+
+Doctor: Okay, that sounds like an ECOG performance status of 1.
+
+Patient: Is that good or bad?
+
+Doctor: It just means you're mostly independent, which is actually good for eligibility.
+
+Patient: Okay.
+
+Doctor: Any brain mets? Have you had headaches, vision changes, weakness in an arm or leg?
+
+Patient: No, none of that.
+
+Doctor: Great. Are you currently living in Portland, Oregon still?
+
+Patient: Yes, northeast Portland.
+
+Doctor: Perfect. Location matters because some trials require in-person visits in the Pacific Northwest.
+
+Patient: I can travel to OHSU or Seattle if I have to, but probably not farther than that.
+
+Doctor: Understood. Last question: have you ever had immunotherapy, like a PD-1 or PD-L1 checkpoint inhibitor?
+
+Patient: No.
+
+Doctor: Great. So to summarize:
+- Patient is a 62-year-old female with stage IIIA non-small cell lung cancer (adenocarcinoma subtype).
+- Completed concurrent carboplatin/paclitaxel chemoradiation mid-September ~6 weeks ago.
+- No prior immunotherapy.
+- ECOG performance status approximately 1.
+- Lives in Portland, Oregon, willing to travel within Pacific Northwest.
+
+Patient: Okay. So… do I qualify for any trials?
+
+Doctor: That’s what we’re going to look at today.

@@ -7,11 +7,17 @@ import { searchTrials } from "./trialsSearch";
 config(); //load .env
 
 const app = express();
-app.use(cors({ origin: true, credentials: false }));
-app.use(express.json());
+//CORS: allow local dev + deployed frontend
+const allowedOrigins = [
+  "http://localhost:5173", //for local dev
+  "https://clinical-trial-matcher-frontend.vercel.app", //production frontend
+];
 
-const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
-app.listen(PORT, '0.0.0.0', () => console.log(`API running on :${PORT}`));
+app.use(
+  cors({
+    origin: allowedOrigins,
+  })
+);
 
 // Limit JSON payload size
 app.use(express.json({ limit: "1mb" }));
@@ -28,8 +34,6 @@ app.get("/health", (_req, res) => {
 
 // Main endpoint
 app.post("/api/match", async (req, res) => {
-  //console.log("🔎 Received /api/match request");
-
   try {
     const { transcript } = req.body;
 
@@ -39,13 +43,13 @@ app.post("/api/match", async (req, res) => {
       });
     }
 
-    // 1. Extract patient data using LLM
+    //1. Extract patient data using LLM
     const patientData = await extractPatientData(transcript);
 
-    // 2. Search clinical trials using extracted data
+    //2. Search clinical trials using extracted data
     const trials = await searchTrials(patientData);
 
-    // 3. Return both
+    //3. Return both
     return res.json({
       patientData,
       trials,
@@ -60,4 +64,8 @@ app.post("/api/match", async (req, res) => {
   }
 });
 
-// single listener already configured above binding to 0.0.0.0 for Render
+//finally start server
+const PORT = process.env.PORT ? Number(process.env.PORT) : 5050;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`API running on :${PORT}`);
+});

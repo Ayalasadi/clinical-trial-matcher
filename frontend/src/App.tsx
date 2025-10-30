@@ -3,6 +3,8 @@ import TranscriptInput from './TranscriptInput'
 import TrialResults from './TrialResults'
 import './App.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE || '';
+
 type MatchResponse = {
   patientData: Record<string, unknown>
   trials: Array<Record<string, unknown>>
@@ -18,7 +20,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/api/match', {
+      const res = await fetch(`${API_BASE}/api/match`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

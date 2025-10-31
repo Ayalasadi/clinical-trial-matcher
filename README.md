@@ -111,7 +111,7 @@ React frontend display\
   - OpenAI-powered extraction (gracefully degrades if quota reached)
   - Fetches and filters trials from ClinicalTrials.gov
   - CORS-secured API (Render ⇆ Vercel)
-  - Clear dark UI with transcript input + structured output
+  - Clear, minimal light UI with transcript input + structured output
 
 ## Future Improvements
   - Enable real OpenAI completions once billing credits are active
@@ -122,7 +122,14 @@ React frontend display\
   - Optional fine-tuned LLM for medical entity extraction
 
 ## Screenshots
-  **Frontend UI**
+  ### 1. Entering a transcript
+  The clinician (or assistant) can paste a portion of the provider–patient conversation. The tool extracts diagnosis, stage, age, location, and treatment history using an LLM, and warns not to include PHI.
+  ![Alt text](docs/input.png)
+  
+  ### 2. Patient summary + trial matches
+  The app shows a structured patient summary and a ranked list of currently enrolling trials from ClinicalTrials.gov, including why each trial might be relevant (e.g. "stage IIIA NSCLC", "Portland, OR").
+  ![Alt text](docs/result.png)
+
 
   **Backend API (Postman)**
   ![Alt text](docs/BackendAPI(Postman).png)

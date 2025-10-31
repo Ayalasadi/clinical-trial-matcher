@@ -1,97 +1,177 @@
 type TrialResultsProps = {
-  patientData: Record<string, unknown> | null
-  trials: Array<Record<string, unknown>> | null
-}
+  loading: boolean;
+  patientData: Record<string, unknown> | null;
+  trials: Array<Record<string, unknown>> | null;
+};
 
 function formatLabel(key: string) {
   return key
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/_/g, ' ')
-    .replace(/\s+/g, ' ')
-    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
-export default function TrialResults({ patientData, trials }: TrialResultsProps) {
-  const hasResults = !!patientData || (trials && trials.length > 0)
-
-  if (!hasResults) {
+export default function TrialResults({
+  loading,
+  patientData,
+  trials,
+}: TrialResultsProps) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="rounded-lg border border-gray-800 bg-gray-900 p-6 text-gray-300">
-        No results yet. Submit a transcript to see patient info and matches.
+      <div className="flex flex-col items-center text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-ds-border border-t-ds-accent mb-4" />
+        <div className="text-sm font-medium text-ds-text-dark">
+          Matching trials…
+        </div>
+        <div className="text-[12px] text-ds-text-body mt-1 leading-snug max-w-sm">
+          Extracting patient details and searching currently enrolling trials.
+        </div>
       </div>
-    )
+    );
   }
 
+  // Empty state
+  const hasResults = !!patientData || (trials && trials.length > 0);
+  if (!hasResults) {
+    return (
+      <div className="text-sm text-ds-text-body text-center leading-relaxed">
+        No results yet. Submit a transcript to see patient info and trial
+        matches.
+      </div>
+    );
+  }
+
+  // Populated state
   return (
-    <div className="space-y-8">
+    <div>
       {patientData && (
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-gray-100">Patient Info</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mb-8">
+          <h2 className="text-ds-text-dark font-semibold text-base tracking-[-0.03em] mb-4">
+            Patient Summary
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[13px] leading-relaxed">
             {Object.entries(patientData).map(([key, value]) => (
-              <div key={key} className="rounded-md border border-gray-800 bg-gray-900 p-3">
-                <div className="text-xs uppercase tracking-wide text-gray-400">{formatLabel(key)}</div>
-                <div className="mt-1 text-sm text-gray-100">
-                  {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+              <div key={key}>
+                <div className="text-[11px] text-ds-text-body uppercase tracking-wide">
+                  {formatLabel(key)}
+                </div>
+                <div className="text-ds-text-dark font-medium mt-1 text-[13px] leading-snug">
+                  {typeof value === "object"
+                    ? JSON.stringify(value, null, 2)
+                    : String(value)}
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </div>
       )}
 
       {trials && (
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-gray-100">Trial Matches ({trials.length})</h2>
+        <div className={patientData ? "mt-8" : ""}>
+          <h2 className="text-ds-text-dark font-semibold text-base tracking-[-0.03em] mb-4">
+            Trial Matches ({trials.length})
+          </h2>
+
           {trials.length === 0 ? (
-            <div className="rounded-lg border border-gray-800 bg-gray-900 p-6 text-gray-300">No matching trials found.</div>
+            <div className="text-sm text-ds-text-body text-center leading-relaxed">
+              No matching trials found.
+            </div>
           ) : (
-            <ul className="space-y-4">
+            <div>
               {trials.map((trial, idx) => {
-                const title = (trial.title || trial.name || trial.nctId || `Trial ${idx + 1}`) as string
-                const summary = (trial.summary || trial.description || '') as string
-                const phase = (trial.phase || trial.trialPhase || '') as string
-                const status = (trial.status || trial.recruitmentStatus || '') as string
-                const location = (trial.location || trial.locations || trial.city || '') as string
-                const url = (trial.url || trial.link || '') as string
+                const title = (trial.title ||
+                  trial.name ||
+                  trial.nctId ||
+                  `Trial ${idx + 1}`) as string;
+                const summary = (trial.summary ||
+                  trial.description ||
+                  "") as string;
+                const phase = (trial.phase ||
+                  trial.trialPhase ||
+                  "") as string;
+                const status = (trial.status ||
+                  trial.recruitmentStatus ||
+                  "") as string;
+                const location = (trial.location ||
+                  trial.locations ||
+                  trial.city ||
+                  "") as string | string[];
+                const url = (trial.url || trial.link || "") as string;
+                const reasons = (trial.reasons || []) as string[];
+
+                // location could be string or array
+                let firstLocation = "";
+                if (typeof location === "string") {
+                  firstLocation = location;
+                } else if (Array.isArray(location) && location.length > 0) {
+                  firstLocation = String(location[0]);
+                }
+
                 return (
-                  <li key={idx} className="rounded-lg border border-gray-800 bg-gray-900 p-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-base font-semibold text-gray-100">{title}</h3>
-                        <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400">
-                          {phase && <span>Phase: <span className="text-gray-200">{String(phase)}</span></span>}
-                          {status && <span>Status: <span className="text-gray-200">{String(status)}</span></span>}
-                          {location && <span>Location: <span className="text-gray-200">{String(location)}</span></span>}
-                        </div>
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-ds-border bg-ds-surface p-4 shadow-sm mb-4"
+                  >
+                    {url ? (
+                      <a
+                        href={String(url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[14px] font-semibold leading-snug text-ds-text-dark hover:opacity-80 block tracking-[-0.03em]"
+                      >
+                        {title}
+                      </a>
+                    ) : (
+                      <div className="text-[14px] font-semibold leading-snug text-ds-text-dark tracking-[-0.03em]">
+                        {title}
                       </div>
-                      {url && (
-                        <a
-                          href={String(url)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white shadow hover:bg-indigo-500"
-                        >
-                          View
-                        </a>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 text-[11px] mt-2">
+                      {phase && (
+                        <span className="rounded-md border border-ds-border bg-white px-2 py-[2px] font-medium text-ds-text-body">
+                          {String(phase)}
+                        </span>
+                      )}
+                      {status && (
+                        <span className="rounded-md border border-ds-border bg-white px-2 py-[2px] font-medium text-ds-text-body">
+                          {String(status)}
+                        </span>
+                      )}
+                      {firstLocation && (
+                        <span className="rounded-md border border-ds-border bg-white px-2 py-[2px] font-medium text-ds-text-body">
+                          {firstLocation}
+                        </span>
                       )}
                     </div>
+
                     {summary && (
-                      <p className="mt-3 text-sm leading-6 text-gray-300">{String(summary)}</p>
+                      <p className="text-[12px] text-ds-text-body leading-relaxed mt-3">
+                        {String(summary)}
+                      </p>
                     )}
-                    <details className="mt-3">
-                      <summary className="cursor-pointer text-xs text-gray-400">Raw data</summary>
-                      <pre className="mt-2 overflow-auto rounded-md bg-black/40 p-3 text-xs text-gray-200">{JSON.stringify(trial, null, 2)}</pre>
-                    </details>
-                  </li>
-                )
+
+                    {reasons && reasons.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-4">
+                        {reasons.map((reason, reasonIdx) => (
+                          <span
+                            key={reasonIdx}
+                            className="rounded-lg border border-green-200 bg-green-50 px-2 py-1 text-[11px] font-medium text-green-700"
+                          >
+                            {String(reason)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
               })}
-            </ul>
+            </div>
           )}
-        </section>
+        </div>
       )}
     </div>
-  )
+  );
 }
-
-

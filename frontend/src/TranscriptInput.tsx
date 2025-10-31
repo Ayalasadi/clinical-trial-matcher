@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SAMPLE_TRANSCRIPTS } from "./sampleTranscripts";
 
 type TranscriptInputProps = {
   onSubmit: (transcript: string) => void;
@@ -11,6 +12,14 @@ export default function TranscriptInput({
 }: TranscriptInputProps) {
   const [text, setText] = useState("");
 
+  //when a preset is chosen, fill the textarea
+  function handlePresetChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const key = e.target.value;
+    if (!key) return;
+    const preset = SAMPLE_TRANSCRIPTS[key as keyof typeof SAMPLE_TRANSCRIPTS];
+    if (preset) setText(preset.text);
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim() || loading) return;
@@ -19,6 +28,27 @@ export default function TranscriptInput({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {/* dropdown for sample transcripts */}
+      <div className="space-y-1 text-[11px]">
+        <label className="block font-medium text-ds-text-dark">
+          Example Patients
+        </label>
+        <select
+          onChange={handlePresetChange}
+          defaultValue=""
+          className="w-full rounded-lg border border-ds-border bg-white px-2 py-2 text-[11px] text-ds-text-dark shadow-inner focus:ring-2 focus:ring-ds-accent/40"
+        >
+          <option value="">– Choose a sample patient –</option>
+          {Object.entries(SAMPLE_TRANSCRIPTS).map(([key, { label }]) => (
+            <option key={key} value={key}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <p className="text-ds-text-body/70">
+          Or paste your own transcript below (no real PHI)
+        </p>
+      </div>
       <label className="block text-[12px] font-medium text-ds-text-dark tracking-[-0.03em]">
         Clinical Transcript
       </label>

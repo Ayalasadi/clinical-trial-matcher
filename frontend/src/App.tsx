@@ -88,12 +88,49 @@ function DesktopRecorder() {
   );
 }
 
+//lightweight editable form for patient data
+function EditablePatientForm({
+  value,
+  onChange,
+}: {
+  value: Record<string, unknown>;
+  onChange: (next: Record<string, unknown>) => void;
+}) {
+  function handleFieldChange(key: string, newVal: string) {
+    const updated = { ...value, [key]: newVal };
+    onChange(updated);
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {Object.entries(value).map(([key, val]) => (
+        <div key={key} className="flex flex-col text-[12px]">
+          <label className="mb-1 font-medium text-ds-text-dark capitalize">
+            {key}
+          </label>
+          <input
+            className="rounded-lg border border-ds-border bg-white px-3 py-2 text-[12px] text-ds-text-dark shadow-inner outline-none focus:ring-2 focus:ring-ds-accent/50"
+            value={val === undefined || val === null ? "" : String(val)}
+            onChange={(e) => handleFieldChange(key, e.target.value)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function App() {
   const [loading, setLoading] = useState(false);
+  const [rerunLoading, setRerunLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [patientData, setPatientData] = useState<Record<string, unknown> | null>(
     null
   );
+
+  //editable copy that clinician can correct
+  const [editedPatientData, setEditedPatientData] = useState<
+    Record<string, unknown> | null
+  >(null);
   const [trials, setTrials] = useState<Array<Record<string, unknown>> | null>(
     null
   );
@@ -116,6 +153,10 @@ export default function App() {
       const data = (await res.json()) as MatchResponse;
 
       setPatientData(data.patientData ?? null);
+
+      // Initialize editable copy to same data
+      setEditedPatientData(data.patientData ?? null);
+
       setTrials(data.trials ?? []);
     } catch (e) {
       const message =
@@ -124,9 +165,44 @@ export default function App() {
           : "Something went wrong while matching trials.";
       setError(message);
       setPatientData(null);
+      setEditedPatientData(null);
       setTrials(null);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // SECOND CALL (corrected form -> new trials, NO LLM)
+  async function handleRerunWithEdits() {
+    if (!editedPatientData) return;
+    setRerunLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/matchFromPatientData`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ patientData: editedPatientData }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed with ${res.status}`);
+      }
+
+      // backend returns { trials }
+      const data = await res.json();
+      setTrials(data.trials ?? []);
+    } catch (e) {
+      const message =
+        e instanceof Error
+          ? e.message
+          : "Re-run failed.";
+      setError(message);
+    } finally {
+      setRerunLoading(false);
     }
   }
 
@@ -136,7 +212,7 @@ export default function App() {
       <div className="w-full bg-black text-white text-[11px] leading-tight">
         <div className="mx-auto max-w-7xl px-4 py-2 text-center">
           <span className="font-medium">
-          Clinical Trial Matcher · Demo only · Not for clinical decision-making
+            Clinical Trial Matcher · Demo only · Not for clinical decision-making
           </span>
         </div>
       </div>
@@ -162,16 +238,15 @@ export default function App() {
             <h1 className="text-4xl font-semibold leading-[1.1] tracking-[-0.04em] text-ds-text-dark sm:text-5xl mb-6">
               From transcripts to trial candidates.
               <br />
-              <span className="text-ds-accent">
-                In one step.
-              </span>
+              <span className="text-ds-accent">In one step.</span>
             </h1>
 
             {/* Body copy */}
             <p className="text-base leading-relaxed text-ds-text-body max-w-md mb-8">
-            Paste part of a provider–patient conversation. The tool uses an LLM to pull
-            out key clinical details: diagnosis, stage, age, location, prior treatment,
-            then looks up currently enrolling trials from ClinicalTrials.gov that match.
+              Paste part of a provider–patient conversation. The tool uses an
+              LLM to pull out key clinical details: diagnosis, stage, age,
+              location, prior treatment, then looks up currently enrolling
+              trials from ClinicalTrials.gov that match.
             </p>
 
             {/* CTA + inline reassurance */}
@@ -189,7 +264,8 @@ export default function App() {
               </button>
 
               <div className="text-[12px] leading-snug text-ds-text-body">
-                Not for clinical decisions. Do not include PHI. <br className="hidden sm:block" />
+                Not for clinical decisions. Do not include PHI.{" "}
+                <br className="hidden sm:block" />
                 Backed by ClinicalTrials.gov data.
               </div>
             </div>
@@ -240,20 +316,61 @@ export default function App() {
 
         {/* RESULTS SECTION */}
         <section className="mt-20">
-          <div className="rounded-2xl border border-ds-border bg-ds-surface p-6 md:p-8 shadow-sm">
-            <TrialResults
-              loading={loading}
-              patientData={patientData}
-              trials={trials}
-            />
-          </div>
-        </section>
+          <div className="rounded-2xl border border-ds-border bg-ds-surface p-6 md:p-8 shadow-sm space-y-10">
+            {/* --- NEW: Editable clinician review block --- */}
+            {editedPatientData && (
+              <div className="rounded-xl border border-ds-border bg-white p-4 md:p-6 shadow-sm">
+                <div className="mb-4 flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                  <div>
+                    <div className="text-[12px] font-semibold text-ds-text-dark tracking-[-0.03em]">
+                      Patient Profile (review & correct)
+                    </div>
+                    <div className="mt-1 text-[11px] leading-snug text-ds-text-body">
+                      The LLM extracted this from the transcript. Edit any field
+                      before running the final match.
+                    </div>
+                  </div>
 
-        {/* FOOTER */}
-        <footer className="text-center text-[11px] leading-relaxed text-ds-text-body mt-20">
-          © {new Date().getFullYear()} Clinical Trial Matcher. All rights
-          reserved.
-        </footer>
+                  <button
+                    className="self-start inline-flex items-center justify-center rounded-lg bg-ds-cta px-3 py-2 text-[12px] font-medium text-ds-cta-text shadow hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleRerunWithEdits}
+                    disabled={rerunLoading}
+                  >
+                    {rerunLoading
+                      ? "Re-running…"
+                      : "Re-run match with corrected info"}
+                  </button>
+                </div>
+
+                <EditablePatientForm
+                  value={editedPatientData}
+                  onChange={setEditedPatientData}
+                />
+
+                <p className="mt-3 text-[11px] leading-snug text-ds-text-body">
+                  This is how clinicians actually work with AI in practice:
+                  AI drafts, clinician verifies, system re-queries using the
+                  verified record.
+                </p>
+              </div>
+            )}
+
+            {/* Trials block (what you already had) */}
+            <div className="rounded-xl border border-ds-border bg-white p-4 md:p-6 shadow-sm">
+              <TrialResults
+                loading={loading || rerunLoading}
+                patientData={editedPatientData ?? patientData}
+                trials={trials}
+              />
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <footer className="text-center text-[11px] leading-relaxed text-ds-text-body mt-20">
+            © {new Date().getFullYear()} Clinical Trial Matcher. All rights
+            reserved.
+          </footer>
+        </section>
       </main>
     </div>
   );

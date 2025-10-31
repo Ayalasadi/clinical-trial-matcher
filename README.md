@@ -5,43 +5,65 @@ Live demo:
 **Backend API:** https://clinical-trial-matcher-api.onrender.com/api/match  
 
 > Demo only — Do not enter real patient data (no PHI).  
-> The LLM integration is live but may return demo data if OpenAI quota is exceeded.
+> Uses mock transcripts and deterministic extraction logic for safe public display.
+---
+## Overview
+
+This demo simulates an **AI-assisted clinical intake system** that converts a provider–patient transcript into structured clinical data and automatically matches relevant clinical trials from [ClinicalTrials.gov](https://clinicaltrials.gov).
+
+It models how clinicians could interact with an AI scribe, verifying, correcting, and rerunning trial searches on the validated data.
 
 ---
 
-## Goal
+## 💡 Key Features
 
-LLM-powered demo that:
+### 1. Transcript → AI Extraction
+Users paste or select a sample clinical transcript.  
+The backend extracts patient attributes such as:
 
-1. Takes a realistic **doctor–patient transcript**,
-2. Uses an **LLM to extract key structured clinical data** (diagnosis, age, stage, etc.),
-3. Queries **ClinicalTrials.gov** for recruiting trials that match,
-4. Returns and displays results in a clear UI.
+- Age, sex  
+- Diagnosis and cancer stage  
+- Location / travel willingness  
+- Prior treatments  
+- ECOG performance status  
+
+### 2. Human-in-the-Loop Verification 🔁
+After extraction, the **Patient Profile (review & correct)** form appears.  
+Clinicians can edit any field before running a final match.  
+Clicking **Re-run match with corrected info** posts the clinician-verified data to `/api/matchFromPatientData`, skipping the LLM and re-querying trials.
+
+### 3. Multiple Sample Patients 🧬
+You can pick from several realistic oncology transcripts:
+
+| Patient | Condition | Location |
+|----------|------------|-----------|
+| **Maria (62F)** | Stage IIIA NSCLC (post-chemoradiation) | Portland, OR |
+| **James (71M)** | Recurrent prostate cancer (rising PSA) | Salem, OR |
+| **Aisha (44F)** | Metastatic HER2+ breast cancer | Seattle, WA |
+
+Each generates structured data and trials reflecting their case.
+
+### 4. Safe Mock Mode
+The backend gracefully falls back to deterministic patient data when the LLM key is absent, allowing the demo to run without real PHI or OpenAI calls.
 
 ---
 
 ## Architecture
 Transcript
 ↓
-OpenAI API (LLM extraction)
+extractPatientData() ← LLM / mock logic
 ↓
-Structured JSON (patient profile)
+searchTrials() ← ClinicalTrials.gov API
 ↓
 ClinicalTrials.gov API query
 ↓
-Trial ranking + formatting
-↓
-React frontend display\
+Frontend React UI ← Editable clinician interface
 
 
 **Stack:**
 - **Backend:** Node.js + Express + TypeScript  
-  - `/api/match` → accepts transcript, returns `{ patientData, trials }`
-  - Uses `extractPatientData()` (OpenAI) + `searchTrials()` (ClinicalTrials.gov)
-  - Deploy: Render  
-- **Frontend:** React + Vite + TypeScript + Tailwind CSS  
-  - Text input, submit, and results display  
-  - Deploy: Vercel  
+- **Frontend:** React + Vite + TailwindCSS  
+- **Deployment:** Render (API) + Vercel (Frontend)
 
 ---
 
@@ -114,12 +136,11 @@ React frontend display\
   - Clear, minimal light UI with transcript input + structured output
 
 ## Future Improvements
-  - Enable real OpenAI completions once billing credits are active
-  - Add trial ranking explanation (e.g., “matched by cancer type + location”)
-  - Add pagination + “save trial” feature
-  - Expand LLM prompt to include comorbidities, biomarkers, or eligibility
-  - Authentication and patient session management
-  - Optional fine-tuned LLM for medical entity extraction
+  - Real LLM integration with OpenAI for extraction
+  - Semantic ranking of trials (vector search)
+  - Save / export trial lists
+  - “Ask about this trial” chat interface
+  - Role-based authentication for provider vs patient view
 
 ## Screenshots
   ### 1. Entering a transcript
